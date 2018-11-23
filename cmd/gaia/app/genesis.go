@@ -26,7 +26,7 @@ var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
 	freeFermionsAcc = sdk.NewInt(150)
-	bondDenom       = "steak"
+	bondDenom       = "joy"
 )
 
 // State to Unmarshal

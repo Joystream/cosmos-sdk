@@ -180,14 +180,14 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewInt64Coin(fmt.Sprintf("%sToken", nodeDirName), 1000),
-				sdk.NewInt64Coin("steak", 150),
+				sdk.NewInt64Coin("joy", 150),
 			},
 		})
 
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewInt64Coin("steak", 100),
+			sdk.NewInt64Coin("joy", 100),
 			stake.NewDescription(nodeDirName, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
