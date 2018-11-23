@@ -33,8 +33,8 @@ const (
 
 // default home directories for expected binaries
 var (
-	DefaultCLIHome  = os.ExpandEnv("$HOME/.gaia_joycli")
-	DefaultNodeHome = os.ExpandEnv("$HOME/.gaia_joyd")
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.joycli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.joyd")
 )
 
 // Extended ABCI application
