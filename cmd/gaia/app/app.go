@@ -26,15 +26,15 @@ import (
 )
 
 const (
-	appName = "GaiaApp"
+	appName = "Joystream"
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
 )
 
 // default home directories for expected binaries
 var (
-	DefaultCLIHome  = os.ExpandEnv("$HOME/.gaiacli")
-	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.gaia_joycli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.gaia_joyd")
 )
 
 // Extended ABCI application

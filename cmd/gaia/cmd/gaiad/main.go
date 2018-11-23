@@ -34,7 +34,7 @@ func main() {
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
 		Use:               "gaiad",
-		Short:             "Gaia Daemon (server)",
+		Short:             "Joystream Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 	appInit := app.GaiaAppInit()

@@ -40,7 +40,7 @@ const (
 var (
 	rootCmd = &cobra.Command{
 		Use:   "gaiacli",
-		Short: "Gaia light-client",
+		Short: "Joystream Gaia light-client",
 	}
 )
 
