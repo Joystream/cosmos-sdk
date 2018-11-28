@@ -11,7 +11,8 @@ GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
-all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
+
+all: get_tools get_vendor_deps build_joy install_joy
 
 ########################################
 ### CI
@@ -46,6 +47,15 @@ else
 	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
 endif
 
+build_joy: check-ledger update_gaia_lite_docs
+ifeq ($(OS),Windows_NT)
+	go build $(BUILD_FLAGS) -o build/joyd.exe ./cmd/gaia/cmd/gaiad
+	go build $(BUILD_FLAGS) -o build/joycli.exe ./cmd/gaia/cmd/gaiacli
+else
+	go build $(BUILD_FLAGS) -o build/joyd ./cmd/gaia/cmd/gaiad
+	go build $(BUILD_FLAGS) -o build/joycli ./cmd/gaia/cmd/gaiacli
+endif
+
 build-linux:
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
@@ -75,6 +85,15 @@ endif
 install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
+
+install_joy: check-ledger update_gaia_lite_docs
+ifeq ($(OS),Windows_NT)
+	go build $(BUILD_FLAGS) -o "${GOPATH}"/bin/joyd.exe ./cmd/gaia/cmd/gaiad
+	go build $(BUILD_FLAGS) -o "${GOPATH}"/bin/joycli.exe ./cmd/gaia/cmd/gaiacli
+else
+	go build $(BUILD_FLAGS) -o "${GOPATH}"/bin/joyd ./cmd/gaia/cmd/gaiad
+	go build $(BUILD_FLAGS) -o "${GOPATH}"/bin/joycli ./cmd/gaia/cmd/gaiacli
+endif
 
 install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
