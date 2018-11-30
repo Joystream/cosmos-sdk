@@ -62,11 +62,7 @@ func DefaultParams() Params {
 	return Params{
 		UnbondingTime: defaultUnbondingTime,
 		MaxValidators: 100,
-<<<<<<< HEAD
-		BondDenom:     "joy",
-=======
 		BondDenom:     DefaultBondDenom,
->>>>>>> v0.27.0
 	}
 }
 
