@@ -6,8 +6,8 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -46,6 +46,9 @@ type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
 
+	// The reference to the Distribution Keeper to spend from community pool
+	distrk distribution.Keeper
+
 	// The ValidatorSet to get information about validators
 	vs sdk.ValidatorSet
 
@@ -67,12 +70,13 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, distrk distribution.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
 		paramSpace:   paramSpace.WithTypeTable(ParamTypeTable()),
 		ck:           ck,
+		distrk:       distrk,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
 		cdc:          cdc,
@@ -447,6 +451,19 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	}
 
 	depositsIterator.Close()
+}
+
+func (keeper Keeper) SetBudgetAndBeneficiary(ctx sdk.Context, proposalID uint64, budget sdk.Coins, beneficiary sdk.AccAddress) sdk.Error {
+	// Checks to see if proposal exists
+	proposal := keeper.GetProposal(ctx, proposalID)
+	if proposal == nil {
+		return ErrUnknownProposal(keeper.codespace, proposalID)
+	}
+	proposal.SetBudget(budget)
+	proposal.SetBeneficiary(beneficiary)
+	keeper.SetProposal(ctx, proposal)
+
+	return nil
 }
 
 // =====================================================

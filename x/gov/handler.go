@@ -25,8 +25,11 @@ func NewHandler(keeper Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-
 	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+
+	if msg.ProposalType == ProposalTypeBudget {
+		keeper.SetBudgetAndBeneficiary(ctx, proposal.GetProposalID(), msg.Budget, msg.Beneficirary)
+	}
 
 	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
 	if err != nil {
@@ -130,6 +133,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 		var action []byte
 		if passes {
+			// Allocate budget to beneficiary - they withdraw separately
+			// (same way block provisions are distributed - by sending a withdrawl transaction
+			if activeProposal.GetProposalType() == ProposalTypeBudget {
+				keeper.distrk.AllocateBudget(ctx, activeProposal.GetBudget(), activeProposal.GetBeneficiary())
+			}
+
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusPassed)
 			action = tags.ActionProposalPassed

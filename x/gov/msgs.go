@@ -19,6 +19,8 @@ type MsgSubmitProposal struct {
 	ProposalType   ProposalKind   `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
+	Budget         sdk.Coins      `json:"budget"`          //  Proposed funds to sepnd from community pool funds
+	Beneficirary   sdk.AccAddress `json:"beneficiary"`     //  Recipient of proposed fund
 }
 
 func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
@@ -28,6 +30,18 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 		ProposalType:   proposalType,
 		Proposer:       proposer,
 		InitialDeposit: initialDeposit,
+	}
+}
+
+func NewMsgSubmitBudgetProposal(title string, description string, proposer sdk.AccAddress, initialDeposit sdk.Coins, budget sdk.Coins, beneficiary sdk.AccAddress) MsgSubmitProposal {
+	return MsgSubmitProposal{
+		Title:          title,
+		Description:    description,
+		ProposalType:   ProposalTypeBudget,
+		Proposer:       proposer,
+		InitialDeposit: initialDeposit,
+		Budget:         budget,
+		Beneficirary:   beneficiary,
 	}
 }
 
@@ -55,11 +69,20 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if !msg.InitialDeposit.IsNotNegative() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
+	if msg.ProposalType == ProposalTypeBudget {
+		if !msg.Budget.IsValid() {
+			return sdk.ErrInvalidCoins(msg.Budget.String())
+		}
+		if !msg.Budget.IsNotNegative() {
+			return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
+		}
+	}
+
 	return nil
 }
 
 func (msg MsgSubmitProposal) String() string {
-	return fmt.Sprintf("MsgSubmitProposal{%s, %s, %s, %v}", msg.Title, msg.Description, msg.ProposalType, msg.InitialDeposit)
+	return fmt.Sprintf("MsgSubmitProposal{%s, %s, %s, %v, %v, %v}", msg.Title, msg.Description, msg.ProposalType, msg.InitialDeposit, msg.Budget, msg.Beneficirary)
 }
 
 // Implements Msg.

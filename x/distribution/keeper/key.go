@@ -11,6 +11,7 @@ var (
 	DelegationDistInfoKey    = []byte{0x02} // prefix for each key to a delegation distribution
 	DelegatorWithdrawInfoKey = []byte{0x03} // prefix for each key to a delegator withdraw info
 	ProposerKey              = []byte{0x04} // key for storing the proposer operator address
+	BudgetDistInfoKey        = []byte{0x05} // prefix for each key to a budget beneficiary withdraw info
 
 	// params store
 	ParamStoreKeyCommunityTax        = []byte("communitytax")
@@ -52,4 +53,9 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 		panic("unexpected key length")
 	}
 	return sdk.AccAddress(addr)
+}
+
+// gets the prefix for a budget withdraw info
+func GetBudgetDistInfoKey(delAddr sdk.AccAddress) []byte {
+	return append(BudgetDistInfoKey, delAddr.Bytes()...)
 }
