@@ -28,7 +28,10 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 
 	if msg.ProposalType == ProposalTypeBudget {
-		keeper.SetBudgetAndBeneficiary(ctx, proposal.GetProposalID(), msg.Budget, msg.Beneficirary)
+		err := keeper.SetBudgetAndBeneficiary(ctx, proposal.GetProposalID(), msg.Budget, msg.Beneficirary)
+		if err != nil {
+			return err.Result()
+		}
 	}
 
 	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)

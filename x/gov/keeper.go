@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -459,11 +460,21 @@ func (keeper Keeper) SetBudgetAndBeneficiary(ctx sdk.Context, proposalID uint64,
 	if proposal == nil {
 		return ErrUnknownProposal(keeper.codespace, proposalID)
 	}
+
+	// Limit budget to the bond token, stakeTypes.DefaultBondDenom
+	if !hasOnlyBondTokens(budget) {
+		return ErrInvalidTokensInBudget(keeper.codespace)
+	}
+
 	proposal.SetBudget(budget)
 	proposal.SetBeneficiary(beneficiary)
 	keeper.SetProposal(ctx, proposal)
 
 	return nil
+}
+
+func hasOnlyBondTokens(coins sdk.Coins) bool {
+	return len(coins) == 1 && coins[0].Denom == stakeTypes.DefaultBondDenom
 }
 
 // =====================================================
