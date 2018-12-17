@@ -11,6 +11,7 @@ const MsgRoute = "distr"
 // Verify interface at compile time
 var _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
 var _, _ sdk.Msg = &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorRewardsAll{}
+var _ sdk.Msg = &MsgWithdrawBudgetAllocation{}
 
 //______________________________________________________________________
 
@@ -169,6 +170,42 @@ func (msg MsgWithdrawValidatorRewardsAll) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgWithdrawValidatorRewardsAll) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
+		return ErrNilValidatorAddr(DefaultCodespace)
+	}
+	return nil
+}
+
+// msg struct for withdrawing budget
+type MsgWithdrawBudgetAllocation struct {
+	BeneficiaryAddr sdk.AccAddress `json:"beneficiary_addr"`
+}
+
+func NewMsgWithdrawBudgetAllocation(beneficiary sdk.AccAddress) MsgWithdrawBudgetAllocation {
+	return MsgWithdrawBudgetAllocation{
+		BeneficiaryAddr: beneficiary,
+	}
+}
+
+func (msg MsgWithdrawBudgetAllocation) Route() string { return MsgRoute }
+func (msg MsgWithdrawBudgetAllocation) Type() string  { return "withdraw_budget_allocation" }
+
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgWithdrawBudgetAllocation) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{sdk.AccAddress(msg.BeneficiaryAddr.Bytes())}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgWithdrawBudgetAllocation) GetSignBytes() []byte {
+	b, err := MsgCdc.MarshalJSON(msg)
+	if err != nil {
+		panic(err)
+	}
+	return sdk.MustSortJSON(b)
+}
+
+// quick validity check
+func (msg MsgWithdrawBudgetAllocation) ValidateBasic() sdk.Error {
+	if msg.BeneficiaryAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil

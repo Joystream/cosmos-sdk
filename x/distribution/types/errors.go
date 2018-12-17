@@ -28,3 +28,9 @@ func ErrNoDelegationDistInfo(codespace sdk.CodespaceType) sdk.Error {
 func ErrNoValidatorDistInfo(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeNoDistributionInfo, "no validator distribution info")
 }
+func ErrWithdrawerHasNoAllocation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeNoDistributionInfo, "withdrawer has no budget allocated")
+}
+func ErrPoolDoesNotHaveEnoughFunds(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeNoDistributionInfo, "pool does not have enough funds")
+}

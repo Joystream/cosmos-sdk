@@ -34,6 +34,7 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 	distTxCmd.AddCommand(client.PostCommands(
 		GetCmdWithdrawRewards(cdc),
 		GetCmdSetWithdrawAddr(cdc),
+		GetCmdWithdrawBudget(cdc),
 	)...)
 
 	return distTxCmd
@@ -131,5 +132,38 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
+	return cmd
+}
+
+func GetCmdWithdrawBudget(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-budget",
+		Short: "withdraw allocated budget",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithAccountDecoder(cdc)
+
+			var msg sdk.Msg
+
+			addr, err := cliCtx.GetFromAddress()
+			if err != nil {
+				return err
+			}
+
+			msg = types.NewMsgWithdrawBudgetAllocation(addr)
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+		},
+	}
+
 	return cmd
 }

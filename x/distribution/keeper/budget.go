@@ -13,12 +13,12 @@ func (k Keeper) AllocateBudget(ctx sdk.Context, amount sdk.Coins, beneficiary sd
 }
 
 // SpendFromCommunityPool - Withdraws full budget from community pool, none if not enough funds
-func (k Keeper) SpendFromCommunityPool(ctx sdk.Context, beneficiary sdk.AccAddress) bool {
+func (k Keeper) SpendFromCommunityPool(ctx sdk.Context, beneficiary sdk.AccAddress) sdk.Error {
 	distInfo := k.GetOrCreateBudgetDistInfo(ctx, beneficiary)
 
 	// Does this beneficiary have any allocations?
 	if !distInfo.HasAllocation() {
-		return false
+		return types.ErrWithdrawerHasNoAllocation(k.codespace)
 	}
 
 	feePool := k.GetFeePool(ctx)
@@ -26,19 +26,19 @@ func (k Keeper) SpendFromCommunityPool(ctx sdk.Context, beneficiary sdk.AccAddre
 	// Ensure we can withdraw full amount from community pool
 	success, communityPool, withdrawl := distInfo.WithdrawFromPool(feePool.CommunityPool)
 	if !success {
-		return false
+		return types.ErrPoolDoesNotHaveEnoughFunds(k.codespace)
 	}
 
 	// Make sure we did not over withdraw - this should be an invariant check?
 	if communityPool.HasNegative() {
-		return false
+		panic("Community pool should not be negative after budget withdrawl")
 	}
 
 	feePool.CommunityPool = communityPool
 	k.SetFeePool(ctx, feePool)
 	k.bankKeeper.AddCoins(ctx, beneficiary, withdrawl)
 	k.RemoveBudgetDistInfo(ctx, distInfo)
-	return true
+	return nil
 }
 
 // GetOrCreateBudgetDistInfo gets the budget distribution info for a beneficiary if exists or creates new
