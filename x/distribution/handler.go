@@ -19,6 +19,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgWithdrawDelegatorReward(ctx, msg, k)
 		case types.MsgWithdrawValidatorRewardsAll:
 			return handleMsgWithdrawValidatorRewardsAll(ctx, msg, k)
+		case types.MsgWithdrawBudgetAllocation:
+			return handleMsgWithdrawBudgetAllocation(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in distribution module").Result()
 		}
@@ -80,6 +82,18 @@ func handleMsgWithdrawValidatorRewardsAll(ctx sdk.Context, msg types.MsgWithdraw
 	tags := sdk.NewTags(
 		tags.Validator, []byte(msg.ValidatorAddr.String()),
 	)
+	return sdk.Result{
+		Tags: tags,
+	}
+}
+
+func handleMsgWithdrawBudgetAllocation(ctx sdk.Context, msg types.MsgWithdrawBudgetAllocation, k keeper.Keeper) sdk.Result {
+	err := k.SpendFromCommunityPool(ctx, msg.BeneficiaryAddr)
+	if err != nil {
+		return err.Result()
+	}
+
+	tags := sdk.NewTags("budget-withdrawl", []byte(msg.BeneficiaryAddr))
 	return sdk.Result{
 		Tags: tags,
 	}

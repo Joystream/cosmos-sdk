@@ -45,6 +45,12 @@ type Proposal interface {
 
 	GetVotingEndTime() time.Time
 	SetVotingEndTime(time.Time)
+
+	GetBudget() sdk.Coins
+	SetBudget(sdk.Coins)
+
+	GetBeneficiary() sdk.AccAddress
+	SetBeneficiary(sdk.AccAddress)
 }
 
 // checks if two proposals are equal
@@ -59,7 +65,8 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetDepositEndTime().Equal(proposalB.GetDepositEndTime()) &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
 		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) &&
-		proposalA.GetVotingEndTime().Equal(proposalB.GetVotingEndTime()) {
+		proposalA.GetBudget().IsEqual(proposalB.GetBudget()) &&
+		proposalA.GetBeneficiary().Equals(proposalB.GetBeneficiary()) {
 		return true
 	}
 	return false
@@ -82,6 +89,9 @@ type TextProposal struct {
 
 	VotingStartTime time.Time `json:"voting_start_time"` //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
+
+	Budget      sdk.Coins      `json:"budget"`
+	Beneficiary sdk.AccAddress `json:"beneficiary"`
 }
 
 // Implements Proposal Interface
@@ -116,6 +126,10 @@ func (tp TextProposal) GetVotingEndTime() time.Time { return tp.VotingEndTime }
 func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
 	tp.VotingEndTime = votingEndTime
 }
+func (tp TextProposal) GetBudget() sdk.Coins                       { return tp.Budget }
+func (tp *TextProposal) SetBudget(budget sdk.Coins)                { tp.Budget = budget }
+func (tp TextProposal) GetBeneficiary() sdk.AccAddress             { return tp.Beneficiary }
+func (tp *TextProposal) SetBeneficiary(beneficiary sdk.AccAddress) { tp.Beneficiary = beneficiary }
 
 //-----------------------------------------------------------
 // ProposalQueue
@@ -133,6 +147,7 @@ const (
 	ProposalTypeText            ProposalKind = 0x01
 	ProposalTypeParameterChange ProposalKind = 0x02
 	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
+	ProposalTypeBudget          ProposalKind = 0x04
 )
 
 // String to proposalType byte.  Returns ff if invalid.
@@ -144,6 +159,8 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 		return ProposalTypeParameterChange, nil
 	case "SoftwareUpgrade":
 		return ProposalTypeSoftwareUpgrade, nil
+	case "Budget":
+		return ProposalTypeBudget, nil
 	default:
 		return ProposalKind(0xff), errors.Errorf("'%s' is not a valid proposal type", str)
 	}
@@ -153,7 +170,8 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 func validProposalType(pt ProposalKind) bool {
 	if pt == ProposalTypeText ||
 		pt == ProposalTypeParameterChange ||
-		pt == ProposalTypeSoftwareUpgrade {
+		pt == ProposalTypeSoftwareUpgrade ||
+		pt == ProposalTypeBudget {
 		return true
 	}
 	return false
@@ -200,6 +218,8 @@ func (pt ProposalKind) String() string {
 		return "ParameterChange"
 	case ProposalTypeSoftwareUpgrade:
 		return "SoftwareUpgrade"
+	case ProposalTypeBudget:
+		return "Budget"
 	default:
 		return ""
 	}

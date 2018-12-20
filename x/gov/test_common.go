@@ -6,6 +6,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -32,11 +34,15 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyGov := sdk.NewKVStoreKey("gov")
+	keyDistr := sdk.NewKVStoreKey("distr")
+	keyFeeCollection := sdk.NewKVStoreKey("fee")
 
 	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams)
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+	fck := auth.NewFeeCollectionKeeper(mapp.Cdc, keyFeeCollection)
+	distrk := distr.NewKeeper(mapp.Cdc, keyDistr, pk.Subspace(stake.DefaultParamspace), ck, sk, fck, distr.DefaultCodespace)
+	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, distrk, sk, DefaultCodespace)
 
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
 	mapp.QueryRouter().AddRoute("gov", NewQuerier(keeper))

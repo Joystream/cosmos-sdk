@@ -65,3 +65,7 @@ func ErrInvalidVote(codespace sdk.CodespaceType, voteOption VoteOption) sdk.Erro
 func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, msg)
 }
+
+func ErrInvalidTokensInBudget(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeUnknownProposal, fmt.Sprintf("Only bond tokens can be used in budget proposals"))
+}

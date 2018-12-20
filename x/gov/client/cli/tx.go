@@ -33,6 +33,8 @@ const (
 	flagStatus       = "status"
 	flagNumLimit     = "limit"
 	flagProposal     = "proposal"
+	flagBudget       = "budget"
+	flagBeneficiary  = "beneficiary"
 )
 
 type proposal struct {
@@ -40,6 +42,8 @@ type proposal struct {
 	Description string
 	Type        string
 	Deposit     string
+	Budget      string
+	Beneficiary string
 }
 
 var proposalFlags = []string{
@@ -47,6 +51,8 @@ var proposalFlags = []string{
 	flagDescription,
 	flagProposalType,
 	flagDeposit,
+	flagBudget,
+	flagBeneficiary,
 }
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
@@ -111,7 +117,22 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, from, amount)
+			var msg sdk.Msg
+
+			if proposalType == gov.ProposalTypeBudget {
+				// Find budget amount
+				budget, _err := sdk.ParseCoins(proposal.Budget)
+				if _err != nil {
+					return _err
+				}
+				beneficiary, _err := sdk.AccAddressFromBech32(proposal.Beneficiary)
+				if _err != nil {
+					return _err
+				}
+				msg = gov.NewMsgSubmitBudgetProposal(proposal.Title, proposal.Description, from, amount, budget, beneficiary)
+			} else {
+				msg = gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, from, amount)
+			}
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -133,7 +154,8 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
 	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(flagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
-
+	cmd.Flags().String(flagBudget, "", "budget")
+	cmd.Flags().String(flagBeneficiary, "", "beneficiary of budget funds")
 	return cmd
 }
 
@@ -146,6 +168,8 @@ func parseSubmitProposalFlags() (*proposal, error) {
 		proposal.Description = viper.GetString(flagDescription)
 		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
 		proposal.Deposit = viper.GetString(flagDeposit)
+		proposal.Budget = viper.GetString(flagBudget)
+		proposal.Beneficiary = viper.GetString(flagBeneficiary)
 		return proposal, nil
 	}
 
